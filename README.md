@@ -14,7 +14,7 @@ and to use
 
 `require 'simple-mock'`
 
-### Sependency
+### Dependency
 
 `simple-mock` requires that you have `String#classify` and `String#constantize` defined.
 
@@ -44,7 +44,7 @@ Fast reference for a start. In this case class name is calculated as (:user).to_
 mock :user do |user, opts|
   user.name  = 'User %s' % sequence(:foo)
   user.email = opts[:email] || Faker::Internet.email
-  
+
   func :say_ok do
     'ok'
   end
@@ -52,7 +52,7 @@ mock :user do |user, opts|
   def user.say_ok
     'ok'
   end
-  
+
   trait :admin do
     user.is_admin = true
   end
@@ -106,5 +106,5 @@ obj = mock.build :foo   # <Foo:0x0...>
 obj.foo                 # :bar
 
 str = mock.build :commmon_name
-str                     # John, Josh or  Mike 
+str                     # John, Josh or  Mike
 ```
