@@ -4,19 +4,19 @@
 
 to install
 
-`gem install simple-mock`
+`gem install clean-mock`
 
 or in Gemfile
 
-`gem 'simple-mock'`
+`gem 'clean-mock'`
 
 and to use
 
-`require 'simple-mock'`
+`require 'clean-mock'`
 
 ### Dependency
 
-`simple-mock` requires that you have `String#classify` and `String#constantize` defined.
+`clean-mock` requires that you have `String#classify` and `String#constantize` defined.
 
 ## mock.define
 
@@ -45,26 +45,27 @@ mock :user do |user, opts|
   user.name  = 'User %s' % sequence(:foo)
   user.email = opts[:email] || Faker::Internet.email
 
-  func :say_ok do
-    'ok'
-  end
-  # or same thing
-  def user.say_ok
-    'ok'
-  end
-
   trait :admin do
+    func :say_ok do
+      'ok'
+    end
+    # or same thing
+    def user.say_ok
+      'ok'
+    end
+
     user.is_admin = true
   end
 end
 
-user = mock.create :usr
+user = mock.create :user
+user.class    # User
 user.name     # 'User 1'
 user.email    # 'john.doe@from-faker-gem.net'
 user.say_ok   # ArgumentError
 user.is_admin # false
 
-user = mock.create :usr, :admin, email: 'foo@bar.baz'
+user = mock.create :user, :admin, email: 'foo@bar.baz'
 user.name     # 'User 1'
 user.email    # 'foo@bar.baz'
 user.say_ok   # 'ok'
@@ -73,7 +74,7 @@ user.is_admin # true
 
 ### Example 2 - custom class as a class
 
-In this case class is given and not caluclated
+In this case class is given and not calculated
 
 ```ruby
 mock :admin_user, class: User do |user, opts|
@@ -88,17 +89,17 @@ mock.create :admin_user # <User:0x0...>
 ```ruby
 mock do
   define :foo, class: false do
-    Foo ||= Class.new do
+    FooBar ||= Class.new do
       def foo
         :bar
       end
     end
 
-    Foo.new
+    FooBar.new
   end
 
   define :commmon_name, class: false do
-      ['John', 'Josh', 'Mike'].sample
+    ['John', 'Josh', 'Mike'].sample
   end
 end
 
