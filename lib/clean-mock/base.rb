@@ -93,4 +93,13 @@ class CleanMock
     @@sequence[name] ||= start || 0
     @@sequence[name] += 1
   end
+
+  # helper to create and link object
+  # create :org -> @object.org_id = mock.create(org).id
+  def create name, field=nil
+    field ||= name.to_s.singularize + '_id'
+    new_object = CleanMock.create(name)
+    @object.send('%s=' % field, new_object.id)
+    new_object
+  end
 end

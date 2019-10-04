@@ -16,11 +16,17 @@ mock do
     trait :admin do
       user.is_admin = true
     end
+
+    trait :with_org do
+      create :org
+    end
   end
 
   define :admin_user, class: User do |user, opts|
     user.is_admin = true
   end
+
+  define(:org) {}
 end
 
 # mock explicit define
@@ -30,11 +36,9 @@ end
 
 # mock implicit define
 mock :foo, class: false do
-  FooBar ||= Class.new do
+  Class.new do
     def foo
       :bar
     end
-  end
-
-  FooBar.new
+  end.new
 end

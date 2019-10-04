@@ -39,7 +39,6 @@ describe CleanMock do
 
   it 'creates object without default class' do
     foo_bar = mock.build(:foo)
-    expect(foo_bar.class).to eq FooBar
     expect(foo_bar.foo).to eq :bar
   end
 
@@ -53,5 +52,14 @@ describe CleanMock do
     name = mock.build(:string)
 
     expect(list.include?(name)).to be true
+  end
+
+  it 'links mocked object to org' do
+    user = mock.build(:user)
+    expect(user.org_id).to be_nil
+
+    user = mock.build(:user, :with_org)
+    expect(user.org.is_saved).to be true
+    expect(user.org_id.class).to be Integer
   end
 end

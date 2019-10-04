@@ -5,13 +5,9 @@ unless ''.respond_to?(:classify)
   require 'dry/inflector'
 
   class String
-    def classify
-       Dry::Inflector.new.classify self
-    end
-
-    def constantize
-       Dry::Inflector.new.constantize self
-    end
+    def classify;     Dry::Inflector.new.classify self; end
+    def constantize;  Dry::Inflector.new.constantize self; end
+    def singularize; Dry::Inflector.new.singularize self; end
   end
 end
 
@@ -39,3 +35,5 @@ RSpec.configure do |config|
   # Use the specified formatter
   config.formatter = :documentation # :progress, :html, :json, CustomFormatterClass
 end
+
+

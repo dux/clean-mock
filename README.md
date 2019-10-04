@@ -28,6 +28,18 @@ and to use
 
 `mock.define(:user, class: false) do |opts| ...` - do not create a class on `mock.build`, pass only options
 
+### CleanMock instance methods, available inside define &block
+
+`trait(name, &block)`   - block to execute and modify object
+
+`func(name, &blok)`     - shortcut for @object.define_method
+
+`sequence(name)`        - create a named sequence
+
+`create(name, [field])` - create and link object
+
+All features available as examples in Example 1.
+
 ## mock - other public methods
 
 `mock.build(:user)` -> build user object, no save
@@ -56,16 +68,22 @@ mock :user do |user, opts|
 
     user.is_admin = true
   end
+
+  trait :with_org do
+    create :org
+  end
 end
 
-user = mock.create :user
+user = mock.build :user
 user.class    # User
+user.id.class # NilClass
 user.name     # 'User 1'
 user.email    # 'john.doe@from-faker-gem.net'
 user.say_ok   # ArgumentError
 user.is_admin # false
 
 user = mock.create :user, :admin, email: 'foo@bar.baz'
+user.id.class # Integer
 user.name     # 'User 1'
 user.email    # 'foo@bar.baz'
 user.say_ok   # 'ok'
@@ -89,13 +107,11 @@ mock.create :admin_user # <User:0x0...>
 ```ruby
 mock do
   define :foo, class: false do
-    FooBar ||= Class.new do
+    Class.new do
       def foo
         :bar
       end
-    end
-
-    FooBar.new
+    end.new
   end
 
   define :commmon_name, class: false do
