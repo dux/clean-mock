@@ -1,5 +1,5 @@
 class CleanMock
-  attr_reader :object
+  attr_reader :model
 
   @@fetched   ||= {}
   @@mock_data ||= {}
@@ -7,7 +7,7 @@ class CleanMock
   @@classes   ||= {}
 
   class << self
-    # defined mocked object
+    # defined mocked model
     def define name, opts={}, &block
       @@mock_data[name] = [block, opts]
     end
@@ -16,15 +16,15 @@ class CleanMock
       build(*args).attributes.select{ |k,v| v.present? }
     end
 
-    # create a new object, no save
+    # create a new model, no save
     def build *args
-      new(*args).object
+      new(*args).model
     end
 
     # save if possible
     def create *args
-      build(*args).tap do |object|
-        object.save if object.respond_to?(:save)
+      build(*args).tap do |model|
+        model.save if model.respond_to?(:save)
       end
     end
 
@@ -42,9 +42,9 @@ class CleanMock
     @kind   = args.shift
     @traits = args
 
-    block, mock_opts = @@mock_data[@kind] || raise(ArgumentError, 'Mock object "%s" not defined' % @kind)
+    block, mock_opts = @@mock_data[@kind] || raise(ArgumentError, 'Mock model "%s" not defined' % @kind)
 
-    @object =
+    @model =
     case mock_opts[:class]
     when FalseClass
       # define :foo, class: false
@@ -66,25 +66,25 @@ class CleanMock
       mock_opts[:class].new
     end
 
-    if @object
-      instance_exec @object, opts, &block
+    if @model
+      instance_exec @model, opts, &block
     else
-      @object = instance_exec opts, &block
+      @model = instance_exec opts, &block
     end
 
     raise 'Trait [%s] not found' % @traits.join(', ') if @traits.first
   end
 
-  # block to execute and modify object
+  # block to execute and modify model
   def trait name, &block
     if @traits.delete(name)
-      instance_exec(@object, &block)
+      instance_exec(@model, &block)
     end
   end
 
   # define or overlod current instance method
   def func name, &block
-    @object.define_singleton_method(name, &block)
+    @model.define_singleton_method(name, &block)
   end
 
   # simple sequence generator by name
@@ -94,12 +94,12 @@ class CleanMock
     @@sequence[name] += 1
   end
 
-  # helper to create and link object
-  # create :org -> @object.org_id = mock.create(org).id
+  # helper to create and link model
+  # create :org -> @model.org_id = mock.create(org).id
   def create name, field=nil
     field ||= name.to_s.singularize + '_id'
-    new_object = CleanMock.create(name)
-    @object.send('%s=' % field, new_object.id)
-    new_object
+    new_model = CleanMock.create(name)
+    @model.send('%s=' % field, new_model.id)
+    new_model
   end
 end
