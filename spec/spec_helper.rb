@@ -7,7 +7,7 @@ unless ''.respond_to?(:classify)
   class String
     def classify;     Dry::Inflector.new.classify self; end
     def constantize;  Dry::Inflector.new.constantize self; end
-    def singularize; Dry::Inflector.new.singularize self; end
+    def singularize;  Dry::Inflector.new.singularize self; end
   end
 end
 

@@ -16,12 +16,12 @@ class CleanMock
       build(*args).attributes.select{ |k,v| v.present? }
     end
 
-    # create a new model, no save
+    # create a new model without save
     def build *args
       new(*args).model
     end
 
-    # save if possible
+    # save if responds to save
     def create *args
       build(*args).tap do |model|
         model.save if model.respond_to?(:save)
