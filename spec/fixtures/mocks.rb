@@ -20,6 +20,14 @@ mock do
     trait :with_org do
       create :org
     end
+
+    if opts[:process_after_save]
+      after_create do
+        func :after_save_test do
+          true
+        end
+      end
+    end
   end
 
   define :admin_user, class: User do |user, opts|
@@ -42,3 +50,5 @@ mock :foo, class: false do
     end
   end.new
 end
+
+

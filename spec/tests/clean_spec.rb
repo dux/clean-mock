@@ -70,4 +70,16 @@ describe CleanMock do
       expect(list.include?(name)).to be true
     end
   end
+
+  context 'with after_save hook' do
+    it 'does not trigger' do
+      user = mock.build :user
+      expect(user.respond_to?(:after_save_test)).to eq(false)
+    end
+
+    it 'does trrgger' do
+      user = mock.build :user, process_after_save: true
+      expect(user.respond_to?(:after_save_test)).to eq(false)
+    end
+  end
 end

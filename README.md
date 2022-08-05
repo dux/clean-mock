@@ -95,7 +95,12 @@ mock :user do |user, opts|
   end
 
   trait :with_org do
-    create :org
+    create :org # shortcut for user.org_id = mock.create(org).id
+  end
+
+  after_create do
+    # stuff to run afte create
+    # user should have id and access to opts is available
   end
 end
 

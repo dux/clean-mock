@@ -23,9 +23,7 @@ class CleanMock
 
     # save if responds to save
     def create *args
-      build(*args).tap do |model|
-        model.save if model.respond_to?(:save)
-      end
+      new(*args).create_mock
     end
 
     # create only once
@@ -96,10 +94,22 @@ class CleanMock
 
   # helper to create and link model
   # create :org -> @model.org_id = mock.create(org).id
-  def create name, field=nil
+  def create name, field = nil
     field ||= name.to_s.singularize + '_id'
     new_model = CleanMock.create(name)
     @model.send('%s=' % field, new_model.id)
     new_model
   end
+
+  def create_mock
+    @model.save if @model.respond_to?(:save)
+    @after_save.call if @after_save
+    @model
+  end
+
+  def after_save &block
+    @after_save = block
+  end
+  alias :after_create :after_save
+
 end
