@@ -8,7 +8,7 @@
 unless respond_to?(:mock)
   Object.class_eval do
     def mock *args, &block
-      if args.first
+      if !args.empty?
         CleanMock.define *args, &block
       elsif block_given?
         CleanMock.instance_exec &block

@@ -1,174 +1,302 @@
-# Clean mock - ruby testing mock and stub helper
+# CleanMock - Ruby test object creation library
 
-Clen mock replaces fixtures in tests. This way, you won't have to keep the fixtures up-to-date as you change the data model.
+CleanMock replaces fixtures in tests. You define mock blueprints for your models, then call `mock.build`, `mock.create`, or `mock.fetch` to produce test objects on the fly.
 
-Clen mock generates data on the fly and adding and removing fields is much easier. Also, you can use it in setup just how you'd use fixtures.
+Adding and removing fields is easy because mocks use your existing classes (ActiveRecord, Sequel, plain Ruby, etc.) directly.
 
-Mocks you create will use objects that you allready have, as for example ActiveRecord or Sequel models.
+Similar to FactoryBot but without any `method_missing` magic. A pointer to the newly created object is passed to your block and you are free to do with it as you please. This means no unexpected behavior and nothing to work around.
 
-Library is similar to factory bot, but creates object in much cleaner - non-magic way.
-Pointer to newely created object is passed and you are free to do with it as you please.
+## Installation
 
-### Why?
-
-There is no `method_missing` inside `clean-mock` lib.
-Author (@dux) loves metaprograming, but thinks that this is not place to use it, hence this lib and not [factory bot](https://github.com/thoughtbot/factory_bot).
-
-Using `clean-mock` will probably never produce unexpected results and you will not have to work around it in any way.
-
-## Installation and usage
-
-to install
-
-`gem install clean-mock`
+```
+gem install clean-mock
+```
 
 or in Gemfile
 
-`gem 'clean-mock'`
+```ruby
+gem 'clean-mock'
+```
 
-and to use
+then require it
 
-`require 'clean-mock'`
+```ruby
+require 'clean-mock'
+```
 
 ### Dependency
 
-`clean-mock` requires that you have `String#classify` and `String#constantize` defined.
+CleanMock requires `String#classify`, `String#constantize`, and `String#singularize` to be defined.
 
-## mock.define
-
-Makes definitinos/descriptions of base mock objects. We start with `new` object and reference is passed.
-
-`mock.define(:user) do |user, opts| ...` - define mock object and use `User` class instance
-
-`mock.define(:user, class: SomeClass) do |user, opts| ...` - use `SomeClass` instead of calculated `User`
-
-`mock.define(:user, class: :some_class) do |some_class, opts|...` - dynamicly create `SomeClass` and use it
-
-`mock.define(:user, class: false) do |opts| ...` - do not create a class on `mock.build`, pass only options
-
-### CleanMock instance methods, available inside define &block
-
-Only the basic helper stuff is available.
-
-`trait(name, &block)`   - Create different versions of a object
-
-`func(name, &blok)` - shortcut for @object.define_method, overload or add class methods
-
-`sequence(name)`  - create a named sequence
-
-`create(name, [field])` - create and link other objects
-
-All features shown as examples in Example 1.
-
-## mock - other public methods
-
-`mock.build(:user)` -> build user object, no save
-
-`mock.create(:user)` -> build user object and save if  `@object.respond_to?(:save) == true`
-
-`mock.fetch(:user)` -> create or fetch allready created object
-
-`mock.attributes_for(:user, :trait1, ...)` -> get attrbibutes for created object
-
-## Example 1 - object with a trait and an option
-
-Fast reference for a start. In this case class name is calculated as `(:user).to_s.classify`
+These are available via ActiveSupport or as a lightweight alternative:
 
 ```ruby
-# define user mock wich will use existing User model for creation of new objects
+require 'dry/inflector'
+
+class String
+  def classify;    Dry::Inflector.new.classify self; end
+  def constantize; Dry::Inflector.new.constantize self; end
+  def singularize; Dry::Inflector.new.singularize self; end
+end
+```
+
+## Defining mocks
+
+There are three equivalent ways to define mocks:
+
+```ruby
+# block style - define multiple mocks at once
+mock do
+  define :user do |user, opts|
+    # ...
+  end
+
+  define :org do |org, opts|
+    # ...
+  end
+end
+
+# explicit style
+mock.define :user do |user, opts|
+  # ...
+end
+
+# shorthand style
 mock :user do |user, opts|
-  user.name    = 'User %s' % sequence(:foo)
-  user.address = 'Somewhere %s' % sequence
-  user.email   = opts[:email] || Faker::Internet.email
+  # ...
+end
+```
+
+### Class resolution
+
+The second argument to `define` controls which class is instantiated:
+
+```ruby
+# default - class is resolved from name: :user -> User
+mock.define(:user) do |user, opts|
+  # user is User.new
+end
+
+# explicit class
+mock.define(:admin_user, class: User) do |user, opts|
+  # user is User.new
+end
+
+# dynamic class from symbol - creates the class if it doesn't exist
+mock.define(:thing, class: :thing) do |thing, opts|
+  # thing is Thing.new (class created via Object.const_set if needed)
+end
+
+# no class - return anything you want
+mock.define(:random_name, class: false) do |opts|
+  ['John', 'Josh', 'Mike'].sample
+end
+```
+
+When `class: false`, only `opts` is passed to the block (no model argument), and whatever the block returns becomes the mock value.
+
+## Instance methods inside define block
+
+These helpers are available inside the `define` block:
+
+### trait(name, &block)
+
+Create named variants of an object. Traits are activated by passing their names to `build`/`create`/`fetch`.
+
+```ruby
+mock.define :user do |user, opts|
+  user.is_admin = false
 
   trait :admin do
-    func :say_ok do
-      'ok'
-    end
+    user.is_admin = true
+  end
+end
 
-    # or the same thing
-    def user.say_ok
-      'ok'
-    end
+mock.build(:user).is_admin         # false
+mock.build(:user, :admin).is_admin # true
+```
 
+Multiple traits can be combined:
+
+```ruby
+mock.build(:user, :admin, :with_org)
+```
+
+Passing an undefined trait raises an error:
+
+```ruby
+mock.build(:user, :nonexistent) # RuntimeError: Trait [nonexistent] not found
+```
+
+### func(name, &block)
+
+Define or overload a singleton method on the model instance.
+
+```ruby
+mock.define :user do |user, opts|
+  func :full_greeting do
+    "Hello, I am #{name}"
+  end
+end
+
+mock.build(:user).full_greeting # "Hello, I am ..."
+```
+
+### sequence(name = nil, start = nil)
+
+Auto-incrementing integer sequence. Each name tracks its own counter independently.
+
+```ruby
+mock.define :user do |user, opts|
+  user.name  = 'User %s' % sequence(:user)   # User 1, User 2, User 3...
+  user.email = 'user-%s@test.com' % sequence  # uses default :seq name
+end
+```
+
+With a custom start value:
+
+```ruby
+mock.define :item do |item, opts|
+  item.position = sequence(:pos, 100)  # 101, 102, 103...
+end
+```
+
+### create(name, field = nil)
+
+Create and link another mock object. Calls `CleanMock.create` on the related mock and assigns its `id` to the current model.
+
+```ruby
+mock.define :user do |user, opts|
+  trait :with_org do
+    create :org  # equivalent to: user.org_id = mock.create(:org).id
+  end
+end
+```
+
+The field name defaults to `name.singularize + '_id'`. Pass an explicit field to override:
+
+```ruby
+create :org, 'organization_id'  # user.organization_id = mock.create(:org).id
+```
+
+### after_save(&block) / after_create(&block)
+
+Register a callback that runs after `create_mock` saves the model. Only fires when using `mock.create` or `mock.fetch`, not `mock.build`.
+
+```ruby
+mock.define :user do |user, opts|
+  after_create do
+    # runs after save
+    # user has been persisted at this point
+  end
+end
+```
+
+`after_create` is an alias for `after_save`.
+
+## Public API
+
+### mock.build(:name, *traits, **opts)
+
+Instantiate the mock object without saving.
+
+```ruby
+user = mock.build(:user)
+user = mock.build(:user, :admin, email: 'foo@bar.com')
+```
+
+### mock.create(:name, *traits, **opts)
+
+Instantiate and call `.save` on the model (if it responds to `save`), then run any `after_save` callbacks.
+
+```ruby
+user = mock.create(:user, :admin)
+user.id # set by your ORM after save
+```
+
+### mock.fetch(:name, *traits, **opts)
+
+Like `create`, but memoized - returns the same object when called with identical arguments.
+
+```ruby
+org = mock.fetch(:org)
+org2 = mock.fetch(:org)
+org.equal?(org2) # true - same object
+
+# different args produce different objects
+a = mock.fetch(:user, email: 'a@a.com')
+b = mock.fetch(:user, email: 'b@b.com')
+a.equal?(b) # false
+```
+
+### mock.attributes_for(:name, *traits, **opts)
+
+Build the object and return its `.attributes` hash, filtered to present values. Useful with ActiveRecord models.
+
+```ruby
+attrs = mock.attributes_for(:user, :admin)
+# { name: 'User 1', email: 'john@example.com', is_admin: true }
+```
+
+## Full example
+
+```ruby
+mock :user do |user, opts|
+  user.name    = 'User %s' % sequence(:user)
+  user.address = 'Somewhere %s' % sequence
+  user.email   = opts[:email] || Faker::Internet.email
+  user.is_admin = false
+
+  func :say_ok do
+    'ok'
+  end
+
+  trait :admin do
     user.is_admin = true
   end
 
   trait :with_org do
-    create :org # shortcut for user.org_id = mock.create(org).id
+    create :org
   end
 
   after_create do
-    # stuff to run afte create
-    # user should have id and access to opts is available
+    # runs after save, user is persisted
   end
 end
 
-# this will create User model but will not save
-user = mock.build :user
-user.class    # User
-user.id.class # NilClass
-user.name     # 'User 1'
-user.email    # 'john.doe@from-faker-gem.net'
-user.say_ok   # ArgumentError
-user.is_admin # false
-user.org      # nil
+mock.define(:org) {}
 
-# this creates and saves new User model
-user = mock.create :user, :admin, email: 'foo@bar.baz'
+mock.define :foo, class: false do
+  Class.new do
+    def foo
+      :bar
+    end
+  end.new
+end
+
+# build - no save
+user = mock.build(:user)
+user.class    # User
+user.name     # 'User 1'
+user.is_admin # false
+
+# create - with save
+user = mock.create(:user, :admin, email: 'foo@bar.baz')
 user.name     # 'User 2'
 user.email    # 'foo@bar.baz'
-user.say_ok   # 'ok'
 user.is_admin # true
-user.org      # nil
 
-# now we will create another mocked object inside base one
-user = mock.create :user, :with_org
-user.name     # 'User 3'
-user.email    # 'john.doe@from-faker-gem.net'
-user.say_ok   # ArgumentError
-user.is_admin # false
-user.org      # <Org>
-```
+# create with linked object
+user = mock.create(:user, :with_org)
+user.org_id   # 11 (or whatever org.id returns)
 
-### Example 2 - custom class as a class
+# fetch - memoized create
+org1 = mock.fetch(:org)
+org2 = mock.fetch(:org)
+org1.equal?(org2) # true
 
-In this case class `User` is given and calculated one `AdminUser` will not be used.
-
-```ruby
-mock :admin_user, class: User do |user, opts|
-  user.is_admin = true
-end
-
-mock.create :admin_user # <User:0x0...>
-```
-
-### Example 3 - class: false
-
-With passing `class: false` you can return anything you like and you will not be using base class.
-
-```ruby
-mock do
-  # return new generic class
-  define :foo, class: false do
-    Class.new do
-      def foo
-        :bar
-      end
-    end.new
-  end
-
-  # retrun random string
-  define :commmon_name, class: false do
-    ['John', 'Josh', 'Mike'].sample
-  end
-end
-
-obj = mock.build :foo   # <Foo:0x0...>
-obj.foo                 # :bar
-
-str = mock.build :commmon_name
-str                     # John, Josh or  Mike
+# class: false
+mock.build(:foo).foo # :bar
 ```
 
 ## Development
@@ -177,9 +305,7 @@ After checking out the repo, run `bundle install` to install dependencies. Then,
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/solnic/clean-mock.
-This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the
-[Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/dux/clean-mock.
 
 ## License
 

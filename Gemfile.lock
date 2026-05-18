@@ -1,34 +1,35 @@
 PATH
   remote: .
   specs:
-    clean-mock (0.2.0)
+    clean-mock (0.2.2)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    awesome_print (1.8.0)
-    concurrent-ruby (1.1.5)
-    diff-lcs (1.3)
-    dry-inflector (0.1.2)
-    faker (2.5.0)
-      i18n (~> 1.6.0)
-    i18n (1.6.0)
+    awesome_print (1.9.2)
+    concurrent-ruby (1.3.6)
+    diff-lcs (1.6.2)
+    dry-inflector (1.3.1)
+    faker (3.6.1)
+      i18n (>= 1.8.11, < 2)
+    i18n (1.14.8)
       concurrent-ruby (~> 1.0)
-    rspec (3.8.0)
-      rspec-core (~> 3.8.0)
-      rspec-expectations (~> 3.8.0)
-      rspec-mocks (~> 3.8.0)
-    rspec-core (3.8.2)
-      rspec-support (~> 3.8.0)
-    rspec-expectations (3.8.5)
+    rspec (3.13.2)
+      rspec-core (~> 3.13.0)
+      rspec-expectations (~> 3.13.0)
+      rspec-mocks (~> 3.13.0)
+    rspec-core (3.13.6)
+      rspec-support (~> 3.13.0)
+    rspec-expectations (3.13.5)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.8.0)
-    rspec-mocks (3.8.2)
+      rspec-support (~> 3.13.0)
+    rspec-mocks (3.13.8)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.8.0)
-    rspec-support (3.8.3)
+      rspec-support (~> 3.13.0)
+    rspec-support (3.13.7)
 
 PLATFORMS
+  arm64-darwin-25
   ruby
 
 DEPENDENCIES
@@ -38,5 +39,19 @@ DEPENDENCIES
   faker
   rspec
 
+CHECKSUMS
+  awesome_print (1.9.2) sha256=e99b32b704acff16d768b3468680793ced40bfdc4537eb07e06a4be11133786e
+  clean-mock (0.2.2)
+  concurrent-ruby (1.3.6) sha256=6b56837e1e7e5292f9864f34b69c5a2cbc75c0cf5338f1ce9903d10fa762d5ab
+  diff-lcs (1.6.2) sha256=9ae0d2cba7d4df3075fe8cd8602a8604993efc0dfa934cff568969efb1909962
+  dry-inflector (1.3.1) sha256=7fb0c2bb04f67638f25c52e7ba39ab435d922a3a5c3cd196120f63accb682dcc
+  faker (3.6.1) sha256=c513d23c1d26b426283e913b25e0b714576011d7c1ad368a9ac6ea2113a1ccde
+  i18n (1.14.8) sha256=285778639134865c5e0f6269e0b818256017e8cde89993fdfcbfb64d088824a5
+  rspec (3.13.2) sha256=206284a08ad798e61f86d7ca3e376718d52c0bc944626b2349266f239f820587
+  rspec-core (3.13.6) sha256=a8823c6411667b60a8bca135364351dda34cd55e44ff94c4be4633b37d828b2d
+  rspec-expectations (3.13.5) sha256=33a4d3a1d95060aea4c94e9f237030a8f9eae5615e9bd85718fe3a09e4b58836
+  rspec-mocks (3.13.8) sha256=086ad3d3d17533f4237643de0b5c42f04b66348c28bf6b9c2d3f4a3b01af1d47
+  rspec-support (3.13.7) sha256=0640e5570872aafefd79867901deeeeb40b0c9875a36b983d85f54fb7381c47c
+
 BUNDLED WITH
-   2.1.4
+  4.0.8

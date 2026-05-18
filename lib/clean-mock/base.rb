@@ -1,13 +1,14 @@
 class CleanMock
+  VERSION ||= File.read(File.expand_path('../../.version', __dir__)).strip
+
   attr_reader :model
 
   @@fetched   ||= {}
   @@mock_data ||= {}
   @@sequence  ||= {}
-  @@classes   ||= {}
 
   class << self
-    # defined mocked model
+    # define a mocked model factory
     def define name, opts={}, &block
       @@mock_data[name] = [block, opts]
     end
@@ -26,10 +27,9 @@ class CleanMock
       new(*args).create_mock
     end
 
-    # create only once
+    # create only once - cached on args identity
     def fetch *args, &block
-      code = Digest::SHA1.hexdigest(args.to_s)
-      @@fetched[code] ||= create(*args, &block)
+      @@fetched[args] ||= create(*args, &block)
     end
   end
 
@@ -40,14 +40,17 @@ class CleanMock
     @kind   = args.shift
     @traits = args
 
-    block, mock_opts = @@mock_data[@kind] || raise(ArgumentError, 'Mock model "%s" not defined' % @kind)
+    block, mock_opts = @@mock_data[@kind] || raise(
+      ArgumentError,
+      'Mock model "%s" not defined. Known: %s' % [@kind, @@mock_data.keys.join(', ')]
+    )
 
     @model =
     case mock_opts[:class]
-    when FalseClass
+    when false
       # define :foo, class: false
       nil
-    when NilClass
+    when nil
       # define :foo
       @kind.to_s.classify.constantize.new
     when Symbol
@@ -80,7 +83,7 @@ class CleanMock
     end
   end
 
-  # define or overlod current instance method
+  # define or overload current instance method
   def func name, &block
     @model.define_singleton_method(name, &block)
   end
@@ -103,13 +106,13 @@ class CleanMock
 
   def create_mock
     @model.save if @model.respond_to?(:save)
-    @after_save.call if @after_save
+    @after_create.call if @after_create
     @model
   end
 
-  def after_save &block
-    @after_save = block
+  # callback fired after `create` / `fetch` saves the model (not on `build`)
+  def after_create &block
+    @after_create = block
   end
-  alias :after_create :after_save
 
 end
