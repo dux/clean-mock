@@ -11,13 +11,6 @@ namespace :gem do
     proc { sh 'vstamp' }
   end
 
-  namespace :version do
-    task :inc do
-      desc 'Stamp .version from the commit count (vstamp count)'
-      proc { sh 'vstamp count' }
-    end
-  end
-
   task :build do
     desc 'Build the clean-mock gem'
     proc do
@@ -28,18 +21,13 @@ namespace :gem do
       sh 'gem build clean-mock.gemspec'
     end
   end
+end
 
-  task :publish do
-    desc 'Inc ver, build and push the gem to RubyGems'
-    proc do
-      hammer 'gem:version:inc'
-      hammer 'gem:build'
-
-      file = Dir.glob('clean-mock-*.gem').sort.last
-      error 'no built gem found' unless file
-      error 'cancelled' unless yes? "push #{file} to RubyGems?"
-      sh "gem push #{file}"
-    end
+task :deploy do
+  desc 'Test, then stamp + tag + push the version (vstamp count --release)'
+  proc do
+    hammer :test
+    sh 'vstamp count --release'
   end
 end
 
