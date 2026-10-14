@@ -1,6 +1,5 @@
-require 'yaml'
-
-version  = YAML.load_file(File.expand_path('.version', __dir__))['version']
+# regex, not YAML: requiring yaml here activates the default psych before Bundler pins the app's
+version  = File.read(File.expand_path('.version', __dir__))[/^version:[ \t]*(\S+)/, 1]
 gem_name = 'clean-mock'
 
 Gem::Specification.new gem_name, version do |gem|
