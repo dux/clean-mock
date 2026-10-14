@@ -1,4 +1,6 @@
-version  = File.read File.expand_path '.version', File.dirname(__FILE__)
+require 'yaml'
+
+version  = YAML.load_file(File.expand_path('.version', __dir__))['version']
 gem_name = 'clean-mock'
 
 Gem::Specification.new gem_name, version do |gem|

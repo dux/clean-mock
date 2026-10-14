@@ -1,5 +1,7 @@
+require 'yaml'
+
 class CleanMock
-  VERSION ||= File.read(File.expand_path('../../.version', __dir__)).strip
+  VERSION ||= YAML.load_file(File.expand_path('../../.version', __dir__))['version']
 
   attr_reader :model
 

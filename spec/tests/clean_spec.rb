@@ -13,7 +13,7 @@ describe CleanMock do
 
   context 'VERSION' do
     it 'matches the .version file' do
-      expect(CleanMock::VERSION).to eq File.read('.version').strip
+      expect(CleanMock::VERSION).to eq File.read('.version')[/^version: *(\S+)/, 1]
     end
   end
 

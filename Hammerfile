@@ -8,32 +8,13 @@ end
 namespace :gem do
   task :version do
     desc 'Print the current gem version'
-    proc { say File.read('.version').strip }
+    proc { sh 'vstamp' }
   end
 
   namespace :version do
     task :inc do
-      desc 'Bump the version in .version (patch by default)'
-      opt :bump, default: 'patch', desc: 'major | minor | patch'
-
-      proc do |opts|
-        file  = '.version'
-        old   = File.read(file).strip
-        parts = old.split('.').map(&:to_i)
-        error "bad version in #{file}: #{old.inspect}" unless parts.size == 3
-
-        case opts[:bump]
-        when 'major' then parts = [parts[0] + 1, 0, 0]
-        when 'minor' then parts = [parts[0], parts[1] + 1, 0]
-        when 'patch' then parts[2] += 1
-        else error "unknown bump: #{opts[:bump]} (major | minor | patch)"
-        end
-
-        newv = parts.join('.')
-        File.write('.version.prev', "#{old}\n")
-        File.write(file, "#{newv}\n")
-        say "#{old} -> #{newv}", :green
-      end
+      desc 'Stamp .version from the commit count (vstamp count)'
+      proc { sh 'vstamp count' }
     end
   end
 
@@ -76,7 +57,7 @@ task :info do
     examples   = spec_files.sum { |f| File.read(f).scan(/^\s+(it|specify)\b/).size }
     sha        = `git rev-parse --short HEAD 2>/dev/null`.strip
 
-    say "  version:    #{File.read('.version').strip}"
+    say "  version:    #{YAML.load_file('.version')['version']}"
     say "  lib files:  #{rb_files.size} (#{loc} LOC)"
     say "  spec files: #{spec_files.size} (#{examples} examples)"
     say "  homepage:   https://github.com/dux/clean-mock"
